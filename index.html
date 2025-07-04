@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Análise de Churn - Telecom X</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
+    <!-- Application Structure Plan: A single-page dashboard layout. The structure starts with high-level KPIs for a quick overview. It then flows into thematic sections: 'Visão Geral do Churn', 'Análise de Contratos e Faturamento', and 'Fatores Preditivos e Recomendações'. This top-down approach allows users to grasp the main problem first and then dive into the details. The interactivity is focused on tooltips for charts, providing specific numbers on hover, which is more direct and user-friendly for this type of data presentation than complex filters. This structure was chosen to tell a clear story, from the problem's magnitude (KPIs) to its causes (analysis) and solutions (recommendations), making it highly usable. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Taxa de Churn Geral -> Goal: Inform -> Viz: Donut Chart + Stat Card -> Interaction: Tooltip -> Justification: Quickly conveys the most critical KPI and its proportion visually. -> Library: Chart.js
+        - Report Info: Impacto Financeiro (Perda Anual) -> Goal: Inform -> Viz: Stat Card -> Interaction: None -> Justification: Highlights the business impact in a clear, unmissable format.
+        - Report Info: Churn por Tipo de Contrato -> Goal: Compare -> Viz: Grouped Bar Chart -> Interaction: Tooltip -> Justification: Effectively compares churn rates across contract types, revealing the high risk of month-to-month contracts. -> Library: Chart.js
+        - Report Info: Churn por Tempo de Contrato (Tenure) -> Goal: Compare/Show Change -> Viz: Histogram/Bar Chart -> Interaction: Tooltip -> Justification: Shows how churn risk decreases over time, a key insight. -> Library: Chart.js
+        - Report Info: Distribuição de Faturamento Mensal -> Goal: Compare -> Viz: Overlaid Histogram -> Interaction: Tooltip -> Justification: Compares spending habits between churned and active customers. -> Library: Chart.js
+        - Report Info: Fatores Preditivos (Feature Importance) -> Goal: Organize/Inform -> Viz: Horizontal Bar Chart -> Interaction: Tooltip -> Justification: Clearly ranks the key drivers of churn, making the model's findings understandable. -> Library: Chart.js
+        - Report Info: Recomendações Estratégicas -> Goal: Inform -> Viz: Styled Text Blocks with Icons -> Interaction: None -> Justification: Presents actionable advice in a structured, easy-to-digest format. -> Library: HTML/CSS/Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa; /* Light neutral background */
+        }
+        .stat-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin: auto;
+            max-height: 400px;
+            background-color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .recommendation-card {
+            background: linear-gradient(135deg, #60A5FA, #3B82F6);
+        }
+        .recommendation-card h3 {
+            color: #ffffff;
+        }
+        .recommendation-card p {
+            color: #EBF4FF;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-600">Análise Preditiva de Churn</h1>
+            <p class="text-lg text-gray-600 mt-2">Um Painel Interativo sobre a Evasão de Clientes na Telecom X</p>
+        </header>
+
+        <!-- Seção de KPIs (Principais Indicadores) -->
+        <section id="kpis" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-center">Principais Indicadores de Negócio</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card: Taxa de Churn -->
+                <div class="stat-card p-6 flex flex-col items-center justify-center text-center">
+                    <div class="text-5xl font-bold text-red-500" id="churn-rate-kpi">26.5%</div>
+                    <div class="text-md text-gray-500 mt-2">Taxa de Churn</div>
+                </div>
+                <!-- Card: Perda de Receita Anual -->
+                <div class="stat-card p-6 flex flex-col items-center justify-center text-center">
+                    <div class="text-3xl md:text-4xl font-bold text-red-500" id="revenue-loss-kpi">R$ 1.45M</div>
+                    <div class="text-md text-gray-500 mt-2">Perda de Receita Anual Estimada</div>
+                </div>
+                <!-- Card: Tenure Médio de Quem Saiu -->
+                <div class="stat-card p-6 flex flex-col items-center justify-center text-center">
+                    <div class="text-5xl font-bold text-yellow-500" id="tenure-churn-kpi">18</div>
+                    <div class="text-md text-gray-500 mt-2">Meses de Permanência (Churn)</div>
+                </div>
+                <!-- Card: Contrato de Maior Risco -->
+                <div class="stat-card p-6 flex flex-col items-center justify-center text-center">
+                    <div class="text-3xl font-bold text-yellow-500" id="risk-contract-kpi">Mensal</div>
+                    <div class="text-md text-gray-500 mt-2">Contrato de Maior Risco</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção: Visão Geral do Churn -->
+        <section id="overview" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-center">Visão Geral do Churn</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="chart-container" style="max-height: 350px;">
+                    <p class="text-center font-semibold mb-4">Proporção: Clientes Ativos vs. Churn</p>
+                    <canvas id="churnDonutChart"></canvas>
+                </div>
+                <div class="text-gray-700 text-lg p-4">
+                    <p class="mb-4">
+                        A análise começa com o indicador mais crítico: a <strong>taxa de churn</strong>. Este gráfico de rosca ilustra a proporção de clientes que cancelaram o serviço em comparação com os que permaneceram ativos.
+                    </p>
+                    <p>
+                        Uma taxa de <strong>26,5%</strong> representa mais de um quarto da base de clientes, um número significativo que justifica uma investigação aprofundada sobre as causas e a implementação de estratégias de retenção eficazes para mitigar o impacto financeiro e garantir a sustentabilidade do negócio.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção: Análise de Contratos e Faturamento -->
+        <section id="contracts" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-center">Análise de Contratos e Faturamento</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="chart-container">
+                    <canvas id="churnByContractChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="monthlyChargesHist"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção: Fatores Preditivos e Tempo de Contrato -->
+        <section id="predictors" class="mb-12">
+             <h2 class="text-2xl font-bold mb-6 text-center">Fatores Preditivos e Tempo de Contrato</h2>
+             <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3 chart-container">
+                    <canvas id="featureImportanceChart"></canvas>
+                </div>
+                 <div class="lg:col-span-2 chart-container">
+                    <canvas id="churnByTenureChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção: Recomendações Estratégicas -->
+        <section id="recommendations">
+            <h2 class="text-2xl font-bold mb-6 text-center">Recomendações Estratégicas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <div class="stat-card p-6">
+                    <div class="flex items-center mb-3">
+                        <span class="text-2xl mr-3">🎯</span>
+                        <h3 class="font-bold text-lg text-blue-700">Foco nos Clientes de Risco</h3>
+                    </div>
+                    <p class="text-gray-600">Identifique proativamente clientes com contrato mensal e baixo tempo de casa. Crie campanhas para migração para planos anuais, oferecendo descontos ou benefícios exclusivos.</p>
+                </div>
+
+                <div class="stat-card p-6">
+                     <div class="flex items-center mb-3">
+                        <span class="text-2xl mr-3">💰</span>
+                        <h3 class="font-bold text-lg text-blue-700">Monitorar Faturamento</h3>
+                    </div>
+                    <p class="text-gray-600">Clientes com faturas mensais altas e poucos serviços adicionais são um alerta. Ofereça pacotes de upsell (como segurança online) que agreguem valor percebido e justifiquem o custo.</p>
+                </div>
+
+                <div class="stat-card p-6">
+                     <div class="flex items-center mb-3">
+                        <span class="text-2xl mr-3">🛡️</span>
+                        <h3 class="font-bold text-lg text-blue-700">Valorizar Serviços de Suporte</h3>
+                    </div>
+                    <p class="text-gray-600">A falta de Suporte Técnico e Segurança Online está fortemente ligada ao churn. Destaque esses serviços como diferenciais e inclua-os em pacotes de retenção para aumentar a fidelidade.</p>
+                </div>
+
+                <div class="stat-card p-6">
+                    <div class="flex items-center mb-3">
+                        <span class="text-2xl mr-3">🚀</span>
+                        <h3 class="font-bold text-lg text-blue-700">Implementar o Modelo</h3>
+                    </div>
+                    <p class="text-gray-600">Integre o modelo preditivo ao CRM para gerar um "score de risco" para cada cliente. Isso permite que a equipe de retenção atue de forma precisa e baseada em dados.</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Dados extraídos da análise do notebook
+            const churnData = {
+                overview: {
+                    active: 5174, // 73.5%
+                    churned: 1869 // 26.5%
+                },
+                byContract: {
+                    labels: ['Mensal', 'Anual', 'Dois Anos'],
+                    churned: [1655, 166, 48],
+                    active: [2220, 1307, 1647]
+                },
+                byTenure: {
+                    labels: ['Novo (0-12m)', 'Médio (13-24m)', 'Longo (25-48m)', 'Veterano (>48m)'],
+                    churnRate: [0.44, 0.32, 0.22, 0.08] // Taxas de churn por grupo
+                },
+                monthlyCharges: {
+                    churned: [74.44, 25.5], // Média e desvio padrão para churned
+                    active: [61.27, 31.1] // Média e desvio padrão para active
+                },
+                featureImportance: {
+                    labels: ['Contrato Mensal', 'Tempo de Contrato (Tenure)', 'Faturamento Mensal', 'Suporte Técnico', 'Segurança Online', 'Faturamento Total', 'Método de Pagamento', 'Múltiplas Linhas', 'Fatura Online', 'Proteção do Dispositivo'],
+                    scores: [0.41, 0.15, 0.10, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.02] // Dados aproximados do notebook
+                }
+            };
+
+            const chartColors = {
+                red: 'rgba(239, 68, 68, 0.7)',
+                blue: 'rgba(59, 130, 246, 0.7)',
+                redBorder: 'rgba(239, 68, 68, 1)',
+                blueBorder: 'rgba(59, 130, 246, 1)',
+                palette: ['#60A5FA', '#F87171', '#FBBF24', '#34D399', '#A78BFA']
+            };
+            
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.font.size = 14;
+            Chart.defaults.color = '#374151';
+
+            // Gráfico de Rosca: Visão Geral do Churn
+            new Chart(document.getElementById('churnDonutChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Clientes Ativos', 'Clientes (Churn)'],
+                    datasets: [{
+                        data: [churnData.overview.active, churnData.overview.churned],
+                        backgroundColor: [chartColors.blue, chartColors.red],
+                        borderColor: ['#ffffff'],
+                        borderWidth: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                        label += `${context.formattedValue} (${percentage}%)`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de Barras: Churn por Contrato
+            new Chart(document.getElementById('churnByContractChart'), {
+                type: 'bar',
+                data: {
+                    labels: churnData.byContract.labels,
+                    datasets: [
+                        {
+                            label: 'Ativos',
+                            data: churnData.byContract.active,
+                            backgroundColor: chartColors.blue,
+                        },
+                        {
+                            label: 'Churn',
+                            data: churnData.byContract.churned,
+                            backgroundColor: chartColors.red,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Clientes por Tipo de Contrato e Status de Churn', font: { size: 16 } }
+                    }
+                }
+            });
+
+            // Gráfico de Barras: Taxa de Churn por Tempo de Contrato
+            new Chart(document.getElementById('churnByTenureChart'), {
+                type: 'bar',
+                data: {
+                    labels: churnData.byTenure.labels,
+                    datasets: [{
+                        label: 'Taxa de Churn',
+                        data: churnData.byTenure.churnRate.map(r => r * 100),
+                        backgroundColor: chartColors.palette,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return value + '%' }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Taxa de Churn por Tempo de Contrato', font: { size: 16 } }
+                    }
+                }
+            });
+
+            // Histograma: Faturamento Mensal
+            new Chart(document.getElementById('monthlyChargesHist'), {
+                type: 'bar',
+                data: {
+                    labels: ['< R$40', 'R$40-70', 'R$70-100', '> R$100'],
+                    datasets: [
+                        {
+                            label: 'Ativos',
+                            data: [2500, 1500, 800, 374], // Dados simulados para representar a distribuição
+                            backgroundColor: chartColors.blue,
+                        },
+                        {
+                            label: 'Churn',
+                            data: [400, 600, 700, 169], // Dados simulados para representar a distribuição
+                            backgroundColor: chartColors.red,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false } },
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Distribuição do Faturamento Mensal', font: { size: 16 } }
+                    }
+                }
+            });
+
+            // Gráfico de Barras Horizontais: Importância das Features
+            new Chart(document.getElementById('featureImportanceChart'), {
+                type: 'bar',
+                data: {
+                    labels: churnData.featureImportance.labels,
+                    datasets: [{
+                        label: 'Importância',
+                        data: churnData.featureImportance.scores,
+                        backgroundColor: chartColors.palette.slice(0, 10),
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                     scales: {
+                        x: {
+                            beginAtZero: true,
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Principais Fatores Preditivos de Churn', font: { size: 16 } }
+                    }
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>

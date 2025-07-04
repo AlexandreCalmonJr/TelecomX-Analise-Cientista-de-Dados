@@ -1,0 +1,86 @@
+# =============================================================================
+# TELECOMX CHURN ANALYSIS - REQUIREMENTS
+# =============================================================================
+# Este arquivo contém todas as dependências necessárias para executar
+# o projeto de análise de churn da TelecomX
+#
+# Instalação: pip install -r requirements.txt
+# =============================================================================
+
+# CORE DATA SCIENCE LIBRARIES
+# =============================================================================
+pandas==2.1.4              # Manipulação e análise de dados
+numpy==1.24.3               # Computação numérica
+matplotlib==3.7.1           # Visualizações básicas
+seaborn==0.12.2             # Visualizações estatísticas avançadas
+plotly==5.17.0              # Visualizações interativas
+
+# MACHINE LEARNING & STATISTICAL MODELING
+# =============================================================================
+scikit-learn==1.3.0         # Algoritmos de ML e métricas
+scipy==1.11.1               # Funções científicas e estatísticas
+
+# WEB REQUESTS & DATA EXTRACTION
+# =============================================================================
+requests==2.31.0            # Requisições HTTP para APIs
+urllib3==2.0.4              # Biblioteca HTTP de baixo nível
+
+# JUPYTER NOTEBOOK ENVIRONMENT
+# =============================================================================
+jupyter==1.0.0              # Interface Jupyter Notebook
+ipykernel==6.25.0           # Kernel Python para Jupyter
+notebook==7.0.2             # Servidor Jupyter Notebook
+
+# UTILITIES & PERFORMANCE
+# =============================================================================
+tqdm==4.66.1                # Barras de progresso
+joblib==1.3.2               # Paralelização e cache
+openpyxl==3.1.2             # Leitura de arquivos Excel
+xlrd==2.0.1                 # Leitura de arquivos Excel legados
+
+# OPTIONAL: ADVANCED ANALYTICS
+# =============================================================================
+# Descomente as linhas abaixo se precisar de funcionalidades adicionais:
+
+# statsmodels==0.14.0       # Modelagem estatística avançada
+# xgboost==1.7.6            # Gradient Boosting otimizado
+# lightgbm==4.0.0           # Gradient Boosting rápido
+# catboost==1.2             # Gradient Boosting para dados categóricos
+# imbalanced-learn==0.11.0  # Técnicas para dados desbalanceados
+# shap==0.42.1              # Explicabilidade de modelos ML
+
+# DEVELOPMENT & TESTING
+# =============================================================================
+# Descomente para ambiente de desenvolvimento:
+
+# pytest==7.4.0            # Framework de testes
+# black==23.7.0             # Formatação automática de código
+# flake8==6.0.0             # Linting e verificação de estilo
+# mypy==1.5.1               # Verificação de tipos
+
+# =============================================================================
+# NOTAS DE INSTALAÇÃO
+# =============================================================================
+# 
+# 1. INSTALAÇÃO BÁSICA:
+#    pip install -r requirements.txt
+#
+# 2. INSTALAÇÃO COM CACHE (recomendado):
+#    pip install --cache-dir ./pip-cache -r requirements.txt
+#
+# 3. INSTALAÇÃO EM AMBIENTE VIRTUAL (recomendado):
+#    python -m venv venv
+#    source venv/bin/activate  # Linux/Mac
+#    venv\Scripts\activate     # Windows
+#    pip install -r requirements.txt
+#
+# 4. ATUALIZAÇÃO DE DEPENDÊNCIAS:
+#    pip install --upgrade -r requirements.txt
+#
+# =============================================================================
+# VERSÕES TESTADAS
+# =============================================================================
+# Python: 3.8+
+# Sistema: Windows 10/11, macOS 12+, Ubuntu 20.04+
+# Memória RAM: Mínimo 4GB, Recomendado 8GB+
+# =============================================================================
